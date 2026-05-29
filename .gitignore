@@ -1,0 +1,13 @@
+# Build outputs
+output/
+*.exe
+*.o
+
+# Local data files
+lista_compras.txt
+lista_compras.csv
+lista_compras.json
+
+# OS
+.DS_Store
+Thumbs.db

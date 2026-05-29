@@ -1,0 +1,44 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "g++",
+			"args": [
+				"-Wall",
+				"-Wextra",
+				"-g3",
+				"*.cpp",
+				"-o",
+				"output/main.exe"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"label": "build-and-run",
+			"type": "shell",
+			"command": "output/main.exe",
+			"dependsOn": [
+				"build"
+			],
+			"dependsOrder": "sequence",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "run",
+			"type": "shell",
+			"command": "output/main.exe",
+			"dependsOn": [
+				"build"
+			],
+			"dependsOrder": "sequence"
+		}
+	]
+}

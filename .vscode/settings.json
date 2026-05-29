@@ -1,0 +1,6 @@
+{
+	"c-cpp-compile-run.cpp-compiler": "C:\\TDM-GCC-64\\bin\\g++.exe",
+	"c-cpp-compile-run.cpp-flags": "-Wall -Wextra -g3 logica.cpp solucion.cpp",
+	"c-cpp-compile-run.output-location": "output",
+	"c-cpp-compile-run.save-before-compile": true
+}

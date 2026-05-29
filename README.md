@@ -18,8 +18,6 @@ Proyecto de consola en C++ que implementa una lista enlazada simple para gestion
 - `Makefile`: tareas de compilación y un objetivo alternativo `corre` para el corrector.
 - `output/`: carpeta de salida para el ejecutable (por defecto requerida por la tarea).
 
-Recomendación: revisar `Lista.cpp` y `main.cpp` para adaptar comportamientos (p. ej. manejo de duplicados o persistencia).
-
 ## Requisitos
 - Compilador C++ compatible con C++11 o superior (ej.: `g++` en MinGW/Windows, GCC o Clang en Linux/macOS).
 - `make` (opcional, se puede compilar manualmente con `g++`).
@@ -128,27 +126,4 @@ Si quieres proponer mejoras:
 2. Mantén los cambios acotados y documenta el comportamiento nuevo.
 3. Abre un PR con un resumen breve y pasos para reproducir.
 
-## Subir a GitHub
-
-Si quieres que suba los cambios a `https://github.com/Davidcx8/Lista-de-Compras.git`, puedo preparar los comandos y hacer el `push` desde aquí. Necesitaré que confirmes:
-
-1. Que deseas que haga `git init` (si no hay repo local), `commit` y `push` al remoto indicado.
-2. Si quieres que cree una rama nueva (ej. `feat/readme`) o use `main`.
-
-Comandos que usaré una vez confirmes (copiar/pegar si prefieres hacerlo localmente):
-
-```bash
-git init
-git add README.md
-git add -A
-git commit -m "feat: add professional README and CLI robustness"
-git remote add origin https://github.com/Davidcx8/Lista-de-Compras.git
-git branch -M main
 git push -u origin main
-```
-
-Nota: el `push` requiere credenciales (token o SSH). Si prefieres, puedo generar el commit y dejar instrucciones para que tú hagas el push.
-
----
-
-Si quieres que haga el `push` desde aquí, confírmame la rama deseada y autoriza la operación. Si prefieres que sólo prepare el commit y tú empujas, dime y lo dejo listo.

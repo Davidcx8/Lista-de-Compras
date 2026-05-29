@@ -68,6 +68,8 @@ Comportamiento importante:
 - Si intentas eliminar un indice invalido, el programa avisa y vuelve al menu.
 - Las entradas numericas invalidas se detectan y se solicita reingreso.
 - Los cambios se guardan automaticamente en el archivo de datos local.
+- Importar permite combinar o reemplazar la lista actual.
+- Exportar e importar permiten definir rutas personalizadas (ENTER usa la ruta por defecto).
 
 ## Ejemplo de uso (sesión corta)
 
@@ -111,7 +113,7 @@ El proyecto guarda y exporta archivos locales en la carpeta de trabajo:
 - `lista_compras.csv`
 - `lista_compras.json`
 
-Los nombres se pueden ajustar en el codigo si lo necesitas.
+Los nombres se pueden ajustar en el codigo si lo necesitas, o usar rutas personalizadas al exportar/importar.
 
 ## Buenas practicas y extensiones sugeridas
 - Exportar e importar desde UI con rutas personalizadas.

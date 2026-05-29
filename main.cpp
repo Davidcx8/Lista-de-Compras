@@ -39,6 +39,37 @@ void Pausa(const string& mensaje)
     cout << endl;
 }
 
+string Trim(const string& texto)
+{
+    size_t inicio = 0;
+    while (inicio < texto.size() &&
+           (texto[inicio] == ' ' || texto[inicio] == '\t' || texto[inicio] == '\r' || texto[inicio] == '\n'))
+    {
+        ++inicio;
+    }
+    size_t fin = texto.size();
+    while (fin > inicio &&
+           (texto[fin - 1] == ' ' || texto[fin - 1] == '\t' || texto[fin - 1] == '\r' || texto[fin - 1] == '\n'))
+    {
+        --fin;
+    }
+    return texto.substr(inicio, fin - inicio);
+}
+
+string LeerRuta(const string& prompt, const string& rutaPorDefecto)
+{
+    cout << prompt << " [" << rutaPorDefecto << "]: ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    string ruta;
+    getline(cin, ruta);
+    ruta = Trim(ruta);
+    if (ruta.empty())
+    {
+        return rutaPorDefecto;
+    }
+    return ruta;
+}
+
 vector<Item> CapturarEstado()
 {
     vector<Item> estado;
@@ -374,8 +405,9 @@ bool ExportarJSON(const string& ruta)
     return true;
 }
 
-bool ImportarCSV(const string& ruta)
+bool ImportarCSV(const string& ruta, vector<Item>& items)
 {
+    items.clear();
     ifstream archivo(ruta.c_str());
     if (!archivo.is_open())
     {
@@ -386,6 +418,13 @@ bool ImportarCSV(const string& ruta)
     bool primeraLinea = true;
     while (getline(archivo, linea))
     {
+        if (!linea.empty() && linea[0] == '\xEF')
+        {
+            if (linea.size() >= 3 && linea[1] == '\xBB' && linea[2] == '\xBF')
+            {
+                linea = linea.substr(3);
+            }
+        }
         if (linea.empty())
         {
             continue;
@@ -393,7 +432,15 @@ bool ImportarCSV(const string& ruta)
         if (primeraLinea)
         {
             primeraLinea = false;
-            if (linea.find("nombre") != string::npos)
+            string lineaLower = linea;
+            for (size_t i = 0; i < lineaLower.size(); ++i)
+            {
+                if (lineaLower[i] >= 'A' && lineaLower[i] <= 'Z')
+                {
+                    lineaLower[i] = static_cast<char>(lineaLower[i] - 'A' + 'a');
+                }
+            }
+            if (lineaLower.find("nombre") != string::npos)
             {
                 continue;
             }
@@ -409,13 +456,14 @@ bool ImportarCSV(const string& ruta)
             continue;
         }
 
-        string nombre = campos[0];
+        string nombre = Trim(campos[0]);
         if (nombre.empty())
         {
             continue;
         }
 
-        istringstream lectura(campos[1]);
+        string cantidadTexto = Trim(campos[1]);
+        istringstream lectura(cantidadTexto);
         int cantidad = 0;
         if (!(lectura >> cantidad))
         {
@@ -426,22 +474,18 @@ bool ImportarCSV(const string& ruta)
             continue;
         }
 
-        Elemento* existente = lista->BuscarPorNombre(nombre);
-        if (existente != NULL)
-        {
-            existente->SetCantidad(existente->GetCantidad() + cantidad);
-        }
-        else
-        {
-            lista->Agregar(new Elemento(nombre, cantidad));
-        }
+        Item item;
+        item.nombre = nombre;
+        item.cantidad = cantidad;
+        items.push_back(item);
     }
 
     return true;
 }
 
-bool ImportarJSON(const string& ruta)
+bool ImportarJSON(const string& ruta, vector<Item>& items)
 {
+    items.clear();
     ifstream archivo(ruta.c_str());
     if (!archivo.is_open())
     {
@@ -449,6 +493,10 @@ bool ImportarJSON(const string& ruta)
     }
 
     string contenido((istreambuf_iterator<char>(archivo)), istreambuf_iterator<char>());
+    if (contenido.size() >= 3 && contenido[0] == '\xEF' && contenido[1] == '\xBB' && contenido[2] == '\xBF')
+    {
+        contenido = contenido.substr(3);
+    }
     size_t pos = 0;
     while (true)
     {
@@ -470,20 +518,32 @@ bool ImportarJSON(const string& ruta)
             ExtraerCampoEntero(bloque, "cantidad", cantidad) &&
             !nombre.empty() && cantidad > 0)
         {
-            Elemento* existente = lista->BuscarPorNombre(nombre);
-            if (existente != NULL)
-            {
-                existente->SetCantidad(existente->GetCantidad() + cantidad);
-            }
-            else
-            {
-                lista->Agregar(new Elemento(nombre, cantidad));
-            }
+            Item item;
+            item.nombre = nombre;
+            item.cantidad = cantidad;
+            items.push_back(item);
         }
         pos = fin + 1;
     }
 
     return true;
+}
+
+void AgregarItems(const vector<Item>& items)
+{
+    for (size_t i = 0; i < items.size(); ++i)
+    {
+        const Item& item = items[i];
+        Elemento* existente = lista->BuscarPorNombre(item.nombre);
+        if (existente != NULL)
+        {
+            existente->SetCantidad(existente->GetCantidad() + item.cantidad);
+        }
+        else
+        {
+            lista->Agregar(new Elemento(item.nombre, item.cantidad));
+        }
+    }
 }
 
 
@@ -702,11 +762,13 @@ void Exportar()
     bool ok = false;
     if (opcion == 1)
     {
-        ok = ExportarCSV("lista_compras.csv");
+        string ruta = LeerRuta("Ruta CSV de salida", "lista_compras.csv");
+        ok = ExportarCSV(ruta);
     }
     else if (opcion == 2)
     {
-        ok = ExportarJSON("lista_compras.json");
+        string ruta = LeerRuta("Ruta JSON de salida", "lista_compras.json");
+        ok = ExportarJSON(ruta);
     }
     else
     {
@@ -735,19 +797,31 @@ void Importar()
         return;
     }
 
+    int modo = 0;
+    cout << "1- Combinar con la lista actual" << endl;
+    cout << "2- Reemplazar la lista actual" << endl;
+    if (!LeerEntero("Elija una opcion => ", modo))
+    {
+        cout << "Entrada invalida." << endl;
+        return;
+    }
+    if (modo != 1 && modo != 2)
+    {
+        cout << "Opcion invalida" << endl;
+        return;
+    }
+
     bool ok = false;
-    bool estadoGuardado = false;
+    vector<Item> items;
     if (opcion == 1)
     {
-        GuardarEstadoParaDeshacer();
-        estadoGuardado = true;
-        ok = ImportarCSV("lista_compras.csv");
+        string ruta = LeerRuta("Ruta CSV de entrada", "lista_compras.csv");
+        ok = ImportarCSV(ruta, items);
     }
     else if (opcion == 2)
     {
-        GuardarEstadoParaDeshacer();
-        estadoGuardado = true;
-        ok = ImportarJSON("lista_compras.json");
+        string ruta = LeerRuta("Ruta JSON de entrada", "lista_compras.json");
+        ok = ImportarJSON(ruta, items);
     }
     else
     {
@@ -757,15 +831,17 @@ void Importar()
 
     if (ok)
     {
+        GuardarEstadoParaDeshacer();
+        if (modo == 2)
+        {
+            lista->Limpiar();
+        }
+        AgregarItems(items);
         GuardarEnArchivo(kDataFile);
         Pausa("-- Importacion completada. Presione ENTER para continuar--");
     }
     else
     {
-        if (estadoGuardado && !historialDeshacer.empty())
-        {
-            historialDeshacer.pop_back();
-        }
         Pausa("-- Error al importar. Presione ENTER para continuar--");
     }
 }
